@@ -428,6 +428,20 @@ body {
   color: #4338ca;
 }
 
+.carrier-logo-img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.carrier-notice {
+  font-size: 0.78rem;
+  color: var(--orange);
+  font-weight: 500;
+  margin-top: 0.3rem;
+}
+
 .carrier-info {
   min-width: 0;
 }

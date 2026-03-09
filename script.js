@@ -188,12 +188,20 @@ function getCarrierClass(nome) {
   return 'pac';
 }
 
-function getCarrierInitial(nome) {
+function getCarrierLogo(nome) {
   const upper = nome.toUpperCase();
-  if (upper.includes('JADLOG') || upper.includes('.PACKAGE') || upper.includes('.COM')) return '🚛';
-  if (upper.includes('SEDEX')) return '⚡';
-  if (upper.includes('PAC')) return '📦';
-  return '📦';
+  if (upper.includes('JADLOG') || upper.includes('.PACKAGE') || upper.includes('.COM')) {
+    return 'https://logospng.org/download/jadlog/logo-jadlog-icon-1024.png';
+  }
+  return 'https://e3ba6e8732e83984.cdn.gocache.net/uploads/image/file/404912/regular_correios-logo-2.png';
+}
+
+function getCarrierNotice(nome) {
+  const upper = nome.toUpperCase();
+  if (upper.includes('JADLOG') || upper.includes('.PACKAGE') || upper.includes('.COM')) {
+    return 'Envios via Jadlog são realizados às quintas-feiras. Peça com antecedência';
+  }
+  return 'Prazo para envio: Em 2 dias úteis';
 }
 
 function getCarrierDisplayName(nome) {
@@ -321,10 +329,11 @@ function renderizarResultados(resultados) {
     card.setAttribute('data-index', i);
 
     const classeCor = getCarrierClass(item.nomeOriginal);
-    const icone = getCarrierInitial(item.nomeOriginal);
+    const logoUrl = getCarrierLogo(item.nomeOriginal);
+    const notice = getCarrierNotice(item.nomeOriginal);
 
     card.innerHTML =
-      '<div class="carrier-icon ' + classeCor + '">' + icone + '</div>' +
+      '<div class="carrier-icon ' + classeCor + '"><img src="' + logoUrl + '" alt="' + escapeHtml(item.nome) + '" class="carrier-logo-img"></div>' +
       '<div class="carrier-info">' +
         '<div class="carrier-name">' + escapeHtml(item.nome) + '</div>' +
         '<div class="carrier-prazo">' +
@@ -334,6 +343,7 @@ function renderizarResultados(resultados) {
           '</svg>' +
           'Entrega em até <strong>' + item.prazo + ' dias úteis</strong>' +
         '</div>' +
+        '<div class="carrier-notice">' + escapeHtml(notice) + '</div>' +
       '</div>' +
       '<div class="carrier-price">' +
         '<div class="price-label">Valor do frete</div>' +
@@ -404,10 +414,10 @@ function selecionarOpcao(index, resultados) {
 }
 
 function mostrarFormularioEnvio(opcao) {
-  const icone = getCarrierInitial(opcao.nomeOriginal);
+  const logoUrl = getCarrierLogo(opcao.nomeOriginal);
 
   dom.selectedSummary.innerHTML =
-    '<div class="summary-icon">' + icone + '</div>' +
+    '<div class="summary-icon"><img src="' + logoUrl + '" alt="' + escapeHtml(opcao.nome) + '" class="carrier-logo-img"></div>' +
     '<div class="summary-details">' +
       '<div class="summary-name">' + escapeHtml(opcao.nome) + '</div>' +
       '<div class="summary-meta">Entrega em até ' + opcao.prazo + ' dias úteis</div>' +
