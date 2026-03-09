@@ -23,7 +23,7 @@ const CONFIG = {
   TRANSPORTADORAS_BLOQUEADAS: ['LOGGI'],
 
   // Número do WhatsApp (apenas dígitos)
-  WHATSAPP_NUMERO: '5581979115041'
+  WHATSAPP_NUMERO: '558197911504'
 };
 
 /* =============================================
