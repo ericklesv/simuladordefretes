@@ -87,10 +87,10 @@
                 name="quantidade"
                 placeholder="Ex: 5"
                 min="1"
-                max="200"
+                max="100"
                 required
               >
-              <span class="input-hint">Mínimo: 1 unidade</span>
+              <span class="input-hint">Mínimo: 1 — Máximo: 100 unidades</span>
               <span class="input-error" id="qtdError"></span>
             </div>
           </div>
@@ -117,6 +117,15 @@
             </div>
           </button>
         </form>
+      </section>
+
+      <!-- Loading visual -->
+      <section class="loading-section" id="loadingSection" style="display: none;">
+        <div class="loading-card">
+          <div class="loading-spinner-lg"></div>
+          <p class="loading-msg" id="loadingMsg">Consultando transportadoras...</p>
+          <div class="loading-bar"><div class="loading-bar-fill" id="loadingBarFill"></div></div>
+        </div>
       </section>
 
       <!-- Resultados -->
@@ -175,7 +184,7 @@
             <div class="form-group col-span-2">
               <label for="shipComplemento">Complemento</label>
               <input type="text" id="shipComplemento" placeholder="Ex: Apto 101" maxlength="20">
-              <span class="input-hint">Máximo 20 caracteres</span>
+              <span class="input-hint" id="complementoCounter">0 / 20 caracteres</span>
               <span class="input-error" id="shipComplementoError"></span>
             </div>
           </div>

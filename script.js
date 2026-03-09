@@ -57,7 +57,12 @@ const dom = {
   shipNumero: document.getElementById('shipNumero'),
   shipComplemento: document.getElementById('shipComplemento'),
   shipNome: document.getElementById('shipNome'),
-  shipCpf: document.getElementById('shipCpf')
+  shipCpf: document.getElementById('shipCpf'),
+  // Loading visual
+  loadingSection: document.getElementById('loadingSection'),
+  loadingMsg: document.getElementById('loadingMsg'),
+  loadingBarFill: document.getElementById('loadingBarFill'),
+  complementoCounter: document.getElementById('complementoCounter')
 };
 
 /* =============================================
@@ -143,8 +148,8 @@ function validarFormulario() {
   if (!qtd || qtd < 1) {
     mostrarErroCampo('qtd', 'Informe pelo menos 1 miniatura.');
     valido = false;
-  } else if (qtd > 200) {
-    mostrarErroCampo('qtd', 'Máximo de 200 miniaturas por simulação.');
+  } else if (qtd > 100) {
+    mostrarErroCampo('qtd', 'Quantidade máxima permitida para simulação: 100 miniaturas.');
     valido = false;
   }
 
@@ -160,12 +165,51 @@ function setLoading(loading) {
   dom.btnText.style.display = loading ? 'none' : 'inline';
   dom.btnIconEl.style.display = loading ? 'none' : 'inline';
   dom.btnLoader.style.display = loading ? 'flex' : 'none';
+  dom.loadingSection.style.display = loading ? 'block' : 'none';
+
+  if (loading) {
+    startLoadingMessages();
+  } else {
+    stopLoadingMessages();
+  }
+}
+
+var loadingInterval = null;
+var loadingMsgs = [
+  'Consultando transportadoras...',
+  'Buscando melhores tarifas...',
+  'Calculando prazos de entrega...',
+  'Comparando opcoes de envio...',
+  'Quase pronto...'
+];
+
+function startLoadingMessages() {
+  var idx = 0;
+  dom.loadingMsg.textContent = loadingMsgs[0];
+  dom.loadingBarFill.style.width = '0%';
+
+  loadingInterval = setInterval(function () {
+    idx++;
+    if (idx < loadingMsgs.length) {
+      dom.loadingMsg.textContent = loadingMsgs[idx];
+      dom.loadingBarFill.style.width = Math.min((idx + 1) / loadingMsgs.length * 100, 90) + '%';
+    }
+  }, 800);
+}
+
+function stopLoadingMessages() {
+  if (loadingInterval) {
+    clearInterval(loadingInterval);
+    loadingInterval = null;
+  }
+  dom.loadingBarFill.style.width = '100%';
 }
 
 function esconderResultados() {
   dom.resultsSection.style.display = 'none';
   dom.errorSection.style.display = 'none';
   dom.shippingSection.style.display = 'none';
+  dom.loadingSection.style.display = 'none';
   state.selectedOption = null;
 }
 
@@ -322,6 +366,23 @@ function escapeHtml(text) {
 function renderizarResultados(resultados) {
   dom.resultsGrid.innerHTML = '';
 
+  // Determinar badges
+  var menorPreco = Infinity;
+  var menorPrazo = Infinity;
+  var idxMenorPreco = -1;
+  var idxMenorPrazo = -1;
+
+  for (var j = 0; j < resultados.length; j++) {
+    if (resultados[j].valor < menorPreco) {
+      menorPreco = resultados[j].valor;
+      idxMenorPreco = j;
+    }
+    if (resultados[j].prazo < menorPrazo) {
+      menorPrazo = resultados[j].prazo;
+      idxMenorPrazo = j;
+    }
+  }
+
   for (let i = 0; i < resultados.length; i++) {
     const item = resultados[i];
     const card = document.createElement('div');
@@ -332,7 +393,18 @@ function renderizarResultados(resultados) {
     const logoUrl = getCarrierLogo(item.nomeOriginal);
     const notice = getCarrierNotice(item.nomeOriginal);
 
+    // Badge HTML
+    var badgeHtml = '';
+    if (i === idxMenorPreco && i === idxMenorPrazo) {
+      badgeHtml = '<span class="badge badge-best-price">Melhor custo-beneficio</span>';
+    } else if (i === idxMenorPreco) {
+      badgeHtml = '<span class="badge badge-best-price">Melhor preco</span>';
+    } else if (i === idxMenorPrazo) {
+      badgeHtml = '<span class="badge badge-fastest">Mais rapido</span>';
+    }
+
     card.innerHTML =
+      badgeHtml +
       '<div class="carrier-icon ' + classeCor + '"><img src="' + logoUrl + '" alt="' + escapeHtml(item.nome) + '" class="carrier-logo-img"></div>' +
       '<div class="carrier-info">' +
         '<div class="carrier-name">' + escapeHtml(item.nome) + '</div>' +
@@ -492,6 +564,11 @@ dom.shipCpf.addEventListener('input', function () {
   document.getElementById(id).addEventListener('input', function () {
     limparErroEnvio(id);
   });
+});
+
+// Contador de caracteres do complemento
+dom.shipComplemento.addEventListener('input', function () {
+  dom.complementoCounter.textContent = this.value.length + ' / 20 caracteres';
 });
 
 function limparErroEnvio(id) {
