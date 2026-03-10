@@ -174,14 +174,15 @@ async function handleCalcularFrete(req, res) {
       return responderJSON(res, 400, { error: 'Peso inválido.' });
     }
 
-    // Montar body para a API SuperFrete (insurance_value vem do frontend)
+    // Montar body para a API SuperFrete (insurance_value vai em options)
     const apiBody = {
       from: { postal_code: SERVER_CONFIG.CEP_ORIGEM },
       to: { postal_code: cepDestino },
       services: '1,2,3',
       options: {
         receipt: false,
-        own_hand: false
+        own_hand: false,
+        insurance_value: insuranceValue
       },
       products: [
         {
@@ -190,7 +191,7 @@ async function handleCalcularFrete(req, res) {
           height: SERVER_CONFIG.DIMENSOES.altura,
           length: SERVER_CONFIG.DIMENSOES.comprimento,
           quantity: 1,
-          insurance_value: insuranceValue
+          insurance_value: 0
         }
       ]
     };
