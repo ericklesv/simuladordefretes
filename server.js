@@ -210,11 +210,21 @@ async function handleCalcularFrete(req, res) {
     }
 
     if (apiResponse.statusCode === 400) {
-      // Tentar extrair mensagem da API
+      // Tentar extrair erros específicos da API
       let apiErr;
       try { apiErr = JSON.parse(apiResponse.body); } catch {}
-      const msg = (apiErr && apiErr.message) || 'CEP inválido ou sem cobertura para este destino.';
-      return responderJSON(res, 400, { error: msg });
+      const erros = (apiErr && apiErr.errors) ? apiErr.errors : {};
+      const chaves = Object.keys(erros).join(' ');
+
+      if (chaves.includes('postcode') || chaves.includes('no_result')) {
+        return responderJSON(res, 400, {
+          error: 'CEP de origem ou destino invalido. Verifique o CEP informado e tente novamente.'
+        });
+      }
+
+      return responderJSON(res, 400, {
+        error: 'Nao foi possivel calcular o frete. Verifique o CEP e tente novamente.'
+      });
     }
 
     if (apiResponse.statusCode < 200 || apiResponse.statusCode >= 300) {
