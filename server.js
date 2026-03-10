@@ -23,7 +23,7 @@ const SERVER_CONFIG = {
   API_URL: 'https://web.superfrete.com/api/v0/calculator',
 
   // CEP de origem fixo
-  CEP_ORIGEM: '50030230',
+  CEP_ORIGEM: '53401600',
 
   // Dimensões padrão do pacote (cm)
   DIMENSOES: {
