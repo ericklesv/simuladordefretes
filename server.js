@@ -209,6 +209,14 @@ async function handleCalcularFrete(req, res) {
       });
     }
 
+    if (apiResponse.statusCode === 400) {
+      // Tentar extrair mensagem da API
+      let apiErr;
+      try { apiErr = JSON.parse(apiResponse.body); } catch {}
+      const msg = (apiErr && apiErr.message) || 'CEP inválido ou sem cobertura para este destino.';
+      return responderJSON(res, 400, { error: msg });
+    }
+
     if (apiResponse.statusCode < 200 || apiResponse.statusCode >= 300) {
       return responderJSON(res, 502, {
         error: 'Erro na API SuperFrete (código ' + apiResponse.statusCode + ').'
