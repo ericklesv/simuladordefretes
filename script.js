@@ -62,8 +62,52 @@ const dom = {
   loadingSection: document.getElementById('loadingSection'),
   loadingMsg: document.getElementById('loadingMsg'),
   loadingBarFill: document.getElementById('loadingBarFill'),
-  complementoCounter: document.getElementById('complementoCounter')
+  complementoCounter: document.getElementById('complementoCounter'),
+  // Seguro
+  seguroCheck: document.getElementById('seguroCheck'),
+  seguroCampo: document.getElementById('seguroCampo'),
+  valorGaragem: document.getElementById('valorGaragem'),
+  seguroError: document.getElementById('seguroError')
 };
+
+/* =============================================
+   SEGURO — TOGGLE E FORMATAÇÃO
+   ============================================= */
+
+dom.seguroCheck.addEventListener('change', function () {
+  dom.seguroCampo.style.display = this.checked ? 'block' : 'none';
+  if (!this.checked) {
+    dom.valorGaragem.value = '';
+    dom.seguroError.textContent = '';
+    dom.valorGaragem.classList.remove('input-error-state');
+  }
+});
+
+// Formatação monetária para o campo de valor da garagem
+function formatarMoedaInput(valor) {
+  var numeros = valor.replace(/\D/g, '');
+  if (!numeros) return '';
+  var num = parseInt(numeros, 10);
+  var reais = Math.floor(num / 100);
+  var centavos = (num % 100).toString().padStart(2, '0');
+  return 'R$ ' + reais.toLocaleString('pt-BR') + ',' + centavos;
+}
+
+function obterValorSeguro() {
+  var raw = dom.valorGaragem.value.replace(/\D/g, '');
+  if (!raw) return 0;
+  return parseInt(raw, 10) / 100;
+}
+
+dom.valorGaragem.addEventListener('input', function () {
+  var pos = this.selectionStart;
+  var lenAntes = this.value.length;
+  this.value = formatarMoedaInput(this.value);
+  var diff = this.value.length - lenAntes;
+  this.setSelectionRange(pos + diff, pos + diff);
+  dom.seguroError.textContent = '';
+  dom.valorGaragem.classList.remove('input-error-state');
+});
 
 /* =============================================
    FORMATAÇÃO DO CEP
@@ -151,6 +195,16 @@ function validarFormulario() {
   } else if (qtd > 100) {
     mostrarErroCampo('qtd', 'Quantidade máxima permitida para simulação: 100 miniaturas.');
     valido = false;
+  }
+
+  // Validação do seguro
+  if (dom.seguroCheck.checked) {
+    var valorSeg = obterValorSeguro();
+    if (valorSeg < 1) {
+      dom.seguroError.textContent = 'Informe o valor da garagem para calcular o seguro.';
+      dom.valorGaragem.classList.add('input-error-state');
+      valido = false;
+    }
   }
 
   return valido;
@@ -263,9 +317,13 @@ function getCarrierDisplayName(nome) {
 async function consultarFrete(cepDestino, peso) {
   const cepLimpo = cepDestino.replace(/\D/g, '');
 
+  // Montar body com ou sem seguro
+  var valorSeguro = dom.seguroCheck.checked ? obterValorSeguro() : 0;
+
   const body = {
     cep_destino: cepLimpo,
-    peso: peso
+    peso: peso,
+    insurance_value: valorSeguro
   };
 
   const response = await fetch(CONFIG.API_URL, {
@@ -325,6 +383,12 @@ function processarResultados(dados, quantidade) {
     const preco = parseFloat(item.price || item.custom_price || item.value || 0);
     const prazo = parseInt(item.delivery_time || item.deadline || item.days || item.delivery_range?.max || 0, 10);
 
+    // Extrair valor do seguro retornado pela API
+    var seguroItem = 0;
+    if (item.packages && item.packages[0] && item.packages[0].insurance_value) {
+      seguroItem = parseFloat(item.packages[0].insurance_value) || 0;
+    }
+
     if (!isTransportadoraPermitida(nome)) continue;
     if (preco <= 0) continue;
 
@@ -339,7 +403,8 @@ function processarResultados(dados, quantidade) {
       nome: getCarrierDisplayName(nome),
       nomeOriginal: nome,
       valor: valorFinal,
-      prazo: prazo
+      prazo: prazo,
+      seguro: seguroItem
     });
   }
 
@@ -420,6 +485,7 @@ function renderizarResultados(resultados) {
       '<div class="carrier-price">' +
         '<div class="price-label">Valor do frete</div>' +
         '<div class="price-value">' + formatarMoeda(item.valor) + '</div>' +
+        (state.seguroAtivo ? '<div class="seguro-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Seguro incluido' + (item.seguro > 0 ? ' <span class="seguro-detalhe">(' + formatarMoeda(item.seguro) + ')</span>' : '') + '</div>' : '') +
       '</div>' +
       '<div class="card-bottom">' +
         '<span style="font-size:0.8rem;color:var(--gray-400)">Clique para selecionar</span>' +
@@ -455,7 +521,9 @@ const state = {
   selectedOption: null,
   resultados: [],
   cep: '',
-  quantidade: 0
+  quantidade: 0,
+  seguroAtivo: false,
+  valorDeclarado: 0
 };
 
 function selecionarOpcao(index, resultados) {
@@ -640,8 +708,14 @@ function gerarMensagemWhatsApp() {
   msg += 'Quantidade: ' + state.quantidade + ' miniatura(s)\n';
   msg += 'Metodo de envio: ' + opcao.nome + '\n';
   msg += 'Valor do frete: ' + formatarMoeda(opcao.valor) + '\n';
-  msg += 'Prazo estimado: ' + opcao.prazo + ' dias uteis\n\n';
-  msg += '--- ENDERECO DE ENTREGA ---\n\n';
+  msg += 'Prazo estimado: ' + opcao.prazo + ' dias uteis\n';
+  if (state.seguroAtivo) {
+    msg += 'Seguro contratado: Sim\n';
+    msg += 'Valor declarado: ' + formatarMoeda(state.valorDeclarado) + '\n';
+  } else {
+    msg += 'Seguro: nao contratado\n';
+  }
+  msg += '\n--- ENDERECO DE ENTREGA ---\n\n';
   msg += 'CEP: ' + dom.shipCep.value + '\n';
   msg += 'Bairro: ' + dom.shipBairro.value.trim() + '\n';
   msg += 'Endereco: ' + dom.shipEndereco.value.trim() + '\n';
@@ -713,6 +787,8 @@ dom.form.addEventListener('submit', async function (e) {
     state.cep = cep;
     state.quantidade = quantidade;
     state.resultados = resultados;
+    state.seguroAtivo = dom.seguroCheck.checked;
+    state.valorDeclarado = dom.seguroCheck.checked ? obterValorSeguro() : 0;
 
   } catch (erro) {
     console.error('Erro ao calcular frete:', erro);

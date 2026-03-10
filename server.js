@@ -164,6 +164,7 @@ async function handleCalcularFrete(req, res) {
     // Validar campos obrigatórios
     const cepDestino = String(dados.cep_destino || '').replace(/\D/g, '');
     const peso = parseFloat(dados.peso);
+    const insuranceValue = parseFloat(dados.insurance_value) || 0;
 
     if (!validarCEP(cepDestino)) {
       return responderJSON(res, 400, { error: 'CEP de destino inválido.' });
@@ -173,7 +174,7 @@ async function handleCalcularFrete(req, res) {
       return responderJSON(res, 400, { error: 'Peso inválido.' });
     }
 
-    // Montar body para a API SuperFrete
+    // Montar body para a API SuperFrete (insurance_value vem do frontend)
     const apiBody = {
       from: { postal_code: SERVER_CONFIG.CEP_ORIGEM },
       to: { postal_code: cepDestino },
@@ -189,7 +190,7 @@ async function handleCalcularFrete(req, res) {
           height: SERVER_CONFIG.DIMENSOES.altura,
           length: SERVER_CONFIG.DIMENSOES.comprimento,
           quantity: 1,
-          insurance_value: 0
+          insurance_value: insuranceValue
         }
       ]
     };

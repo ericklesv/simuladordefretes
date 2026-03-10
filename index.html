@@ -95,6 +95,34 @@
             </div>
           </div>
 
+          <!-- Seguro -->
+          <div class="seguro-section">
+            <label class="checkbox-label" for="seguroCheck">
+              <input type="checkbox" id="seguroCheck">
+              <span class="checkbox-custom"></span>
+              <span class="checkbox-text">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                Adicionar seguro ao envio
+              </span>
+            </label>
+
+            <div class="seguro-campo" id="seguroCampo" style="display: none;">
+              <div class="form-group">
+                <label for="valorGaragem">Valor da garagem (R$)</label>
+                <input
+                  type="text"
+                  id="valorGaragem"
+                  placeholder="R$ 0,00"
+                  inputmode="decimal"
+                >
+                <span class="input-hint seguro-hint">Confira o valor total da sua garagem no sistema para garantir que o seguro cubra corretamente sua compra.</span>
+                <span class="input-error" id="seguroError"></span>
+              </div>
+            </div>
+          </div>
+
           <!-- Info do peso -->
           <div class="peso-info" id="pesoInfo" style="display: none;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
